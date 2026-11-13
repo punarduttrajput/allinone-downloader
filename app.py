@@ -43,6 +43,8 @@ ALLOWED_HOSTS = {
     "instagr.am": "instagram",
 }
 
+PLAYER_CLIENTS = [c.strip() for c in os.environ.get("YT_PLAYER_CLIENTS", "").split(",") if c.strip()]
+
 QUALITIES = ["best", "1080", "720", "480", "360", "audio"]
 
 app = Flask(__name__, static_folder="static")
@@ -75,6 +77,12 @@ def base_opts() -> dict:
     }
     if COOKIES_FILE.exists():
         opts["cookiefile"] = str(COOKIES_FILE)
+    if shutil.which("node"):
+        # Node solves YouTube's JS challenges (yt-dlp only looks for Deno by default).
+        opts["js_runtimes"] = {"node": {}}
+    if PLAYER_CLIENTS:
+        # e.g. "mweb,tv,web_safari" - clients that pair well with PO tokens
+        opts["extractor_args"] = {"youtube": {"player_client": PLAYER_CLIENTS}}
     return opts
 
 
