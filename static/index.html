@@ -8,17 +8,20 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f6f5f2; --surface: #ffffff; --ink: #18181b; --muted: #6b6b73;
+    --bg: #f6f5f2; --surface: #ffffff; --ink: #18181b; --muted: #6b6b73; --faint: #efeee9;
     --line: #e4e2dc; --accent: #e5484d; --accent-ink: #fff; --ok: #2f9e66;
+    --err-bg: #fdecec; --err-ink: #a8262b;
     --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.06);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #111113; --surface: #1a1a1d; --ink: #ededef; --muted: #9b9ba3;
-      --line: #2a2a2f; --accent: #f2555a; --shadow: 0 8px 24px rgba(0,0,0,.4);
+      --bg: #111113; --surface: #1a1a1d; --ink: #ededef; --muted: #9b9ba3; --faint: #232327;
+      --line: #2a2a2f; --accent: #f2555a; --ok: #4cc38a;
+      --err-bg: #2a1517; --err-ink: #ff9b9e; --shadow: 0 8px 24px rgba(0,0,0,.4);
     }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
     margin: 0; min-height: 100vh; background: var(--bg); color: var(--ink);
     font: 16px/1.5 Inter, system-ui, sans-serif;
@@ -27,32 +30,61 @@
   main { width: 100%; max-width: 640px; }
   h1 { font-size: clamp(28px, 6vw, 40px); letter-spacing: -.02em; margin: 0 0 8px; }
   .sub { color: var(--muted); margin: 0 0 32px; }
-  .chips { display: flex; gap: 8px; margin-bottom: 16px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
   .chip { font-size: 13px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--muted); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   form { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--line);
          border-radius: 14px; padding: 6px; box-shadow: var(--shadow); }
-  input[type=url] { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink);
-                    font: inherit; padding: 12px 12px; outline: none; }
-  button { font: inherit; font-weight: 600; border: 0; border-radius: 10px; cursor: pointer;
-           padding: 12px 18px; background: var(--accent); color: var(--accent-ink); white-space: nowrap; }
+  form:focus-within { border-color: var(--muted); }
+  #url { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink);
+         font: inherit; padding: 12px; outline: none; }
+  button, .btn { font: inherit; font-weight: 600; border: 0; border-radius: 10px; cursor: pointer; text-decoration: none;
+           padding: 12px 18px; background: var(--accent); color: var(--accent-ink); white-space: nowrap;
+           display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
   button:disabled { opacity: .55; cursor: default; }
-  .ghost { background: transparent; color: var(--muted); padding: 12px; }
+  button:focus-visible, .btn:focus-visible, .q:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  .ghost { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .linkish { background: none; color: var(--muted); padding: 6px 8px; font-weight: 500; text-decoration: underline; }
 
-  .msg { margin-top: 16px; font-size: 14px; color: var(--accent); min-height: 1.5em; }
+  .alert { margin-top: 16px; padding: 12px 14px; border-radius: 12px; background: var(--err-bg); color: var(--err-ink);
+           font-size: 15px; display: none; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+  .alert.show { display: flex; }
+  .alert button { background: var(--err-ink); color: var(--err-bg); padding: 8px 14px; }
+
   .card { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-          overflow: hidden; box-shadow: var(--shadow); display: none; }
+          overflow: hidden; box-shadow: var(--shadow); display: none; scroll-margin: 16px; }
   .card.show { display: block; }
   .media { display: flex; gap: 16px; padding: 16px; }
-  .thumb { width: 160px; aspect-ratio: 16/9; object-fit: cover; border-radius: 8px; background: var(--line); flex-shrink: 0; }
-  .meta { min-width: 0; }
+  .thumb { width: 168px; aspect-ratio: 16/9; border-radius: 8px; background: var(--faint); flex-shrink: 0;
+           overflow: hidden; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .meta { min-width: 0; flex: 1; }
   .meta h2 { font-size: 17px; margin: 0 0 4px; line-height: 1.35;
              display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
   .meta p { margin: 0; color: var(--muted); font-size: 14px; }
-  .opts { border-top: 1px solid var(--line); padding: 16px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .q { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 8px 14px; font-weight: 500; }
-  .q[aria-pressed=true] { border-color: var(--ink); background: var(--ink); color: var(--surface); }
-  .opts .go { margin-left: auto; }
+
+  /* loading skeleton */
+  .sk { background: linear-gradient(90deg, var(--faint) 25%, var(--line) 50%, var(--faint) 75%);
+        background-size: 200% 100%; animation: shimmer 1.3s infinite linear; border-radius: 6px; }
+  @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .sk-line { height: 14px; margin: 6px 0 10px; }
+  .loading-row { border-top: 1px solid var(--line); padding: 14px 16px; display: flex; align-items: center;
+                 justify-content: space-between; gap: 12px; font-size: 14px; color: var(--muted); }
+  .spinner { width: 16px; height: 16px; border: 2px solid var(--line); border-top-color: var(--accent);
+             border-radius: 50%; animation: spin .8s linear infinite; flex-shrink: 0; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { display: flex; align-items: center; gap: 10px; }
+
+  .opts { border-top: 1px solid var(--line); padding: 16px; }
+  .opts-label { font-size: 13px; color: var(--muted); margin: 0 0 10px; }
+  .qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .q { background: transparent; color: var(--ink); border: 1px solid var(--line); padding: 10px 12px;
+       font-weight: 600; flex-direction: column; align-items: flex-start; gap: 0; text-align: left; position: relative; }
+  .q small { font-weight: 400; font-size: 12px; color: var(--muted); }
+  .q[aria-checked=true] { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+  .q[aria-checked=true]::after { content: "✓"; position: absolute; top: 8px; right: 10px; font-size: 13px; }
+  .go { width: 100%; margin-top: 14px; }
 
   .progress { padding: 0 16px 16px; display: none; }
   .progress.show { display: block; }
@@ -60,130 +92,272 @@
   .bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
   .bar.indet > i { width: 30%; animation: slide 1.2s infinite ease-in-out; }
   @keyframes slide { from { margin-left: -30%; } to { margin-left: 100%; } }
-  .stat { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); margin-top: 8px; }
-  .done { color: var(--ok); font-weight: 600; }
+  .stat { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+  .done { display: none; padding: 16px; border-top: 1px solid var(--line); }
+  .done.show { display: block; }
+  .done-head { display: flex; align-items: center; gap: 8px; color: var(--ok); font-weight: 600; margin-bottom: 4px; }
+  .done p { margin: 0 0 12px; font-size: 14px; color: var(--muted); word-break: break-word; }
+  .done-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   footer { margin-top: auto; padding-top: 48px; font-size: 12px; color: var(--muted); text-align: center; max-width: 520px; }
 
   @media (max-width: 520px) {
     body { padding-top: 40px; }
-    form { flex-direction: column; }
+    form { flex-wrap: wrap; }
+    #url { flex-basis: 100%; }
+    form button { flex: 1; }
     .media { flex-direction: column; }
     .thumb { width: 100%; }
-    .opts .go { margin-left: 0; width: 100%; }
   }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0s !important; transition: none !important; } }
 </style>
 </head>
 <body>
 <main>
-  <div class="chips"><span class="chip">YouTube</span><span class="chip">Shorts</span><span class="chip">Instagram Reels &amp; Posts</span></div>
+  <div class="chips" aria-label="Supported"><span class="chip">YouTube</span><span class="chip">Shorts</span><span class="chip">Instagram Reels &amp; Posts</span></div>
   <h1>Paste a link. Get the video.</h1>
   <p class="sub">Works with YouTube videos, Shorts and public Instagram reels/posts. MP4 or MP3.</p>
 
-  <form id="form">
-    <input id="url" type="url" placeholder="https://www.youtube.com/watch?v=…  or  https://www.instagram.com/reel/…" required autocomplete="off">
-    <button type="button" class="ghost" id="paste" title="Paste from clipboard">Paste</button>
-    <button id="fetch" type="submit">Fetch</button>
+  <form id="form" novalidate>
+    <label for="url" class="sr">Video link</label>
+    <input id="url" type="text" inputmode="url" placeholder="Paste a YouTube or Instagram link"
+           autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+    <button type="button" class="ghost" id="paste">Paste</button>
+    <button id="fetch" type="submit">Get video</button>
   </form>
-  <div class="msg" id="msg" role="status"></div>
 
-  <section class="card" id="card">
+  <div class="alert" id="alert" role="alert">
+    <span id="alertText"></span>
+    <button type="button" id="alertRetry" hidden>Try again</button>
+  </div>
+
+  <section class="card" id="card" aria-live="polite">
     <div class="media">
-      <img class="thumb" id="thumb" alt="" referrerpolicy="no-referrer">
-      <div class="meta">
-        <h2 id="title"></h2>
-        <p id="byline"></p>
-      </div>
+      <div class="thumb" id="thumb"></div>
+      <div class="meta" id="meta"></div>
     </div>
-    <div class="opts" id="opts"></div>
-    <div class="progress" id="progress">
-      <div class="bar" id="bar"><i></i></div>
-      <div class="stat"><span id="pstatus">Starting…</span><span id="pinfo"></span></div>
-    </div>
+    <div id="body"></div>
   </section>
 </main>
 <footer>Only download videos you own or have permission to save. Respect creators and each platform's terms.</footer>
 
 <script>
 const $ = id => document.getElementById(id);
-let current = null, quality = "best", polling = null;
+const LINK_RE = /(?:https?:\/\/)?(?:[\w-]+\.)*(?:youtube\.com|youtu\.be|instagram\.com|instagr\.am)\/\S*/i;
 
-const label = q => ({ best: "Best", audio: "MP3 audio" }[q] || q + "p");
+let current = null;          // video info from /api/info
+let quality = null;          // selected option id
+let fetchCtl = null;         // AbortController for the info request
+let polling = null, stageTimer = null;
+let retryAction = null;
+
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmtTime = s => s == null ? "" : `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
 const fmtSpeed = b => !b ? "" : b > 1048576 ? (b / 1048576).toFixed(1) + " MB/s" : (b / 1024).toFixed(0) + " KB/s";
+const fmtSize = b => !b ? "" : b >= 1073741824 ? (b / 1073741824).toFixed(1) + " GB" : b >= 1048576 ? Math.round(b / 1048576) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+const platformName = p => p === "youtube" ? "YouTube" : "Instagram";
 
-function setMsg(t) { $("msg").textContent = t || ""; }
-
-$("paste").onclick = async () => {
-  try { $("url").value = (await navigator.clipboard.readText()).trim(); $("url").focus(); }
-  catch { setMsg("Clipboard access was blocked — paste with Ctrl+V."); }
-};
-
-$("form").onsubmit = async e => {
-  e.preventDefault();
-  setMsg(""); $("card").classList.remove("show"); clearInterval(polling);
-  const url = $("url").value.trim();
-  $("fetch").disabled = true; $("fetch").textContent = "Fetching…";
-  try {
-    const r = await fetch("/api/info", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url }) });
-    const d = await r.json();
-    if (!r.ok) throw new Error(d.error);
-    current = { url, ...d };
-    render();
-  } catch (err) { setMsg(err.message || "Something went wrong."); }
-  finally { $("fetch").disabled = false; $("fetch").textContent = "Fetch"; }
-};
-
-function render() {
-  $("thumb").src = current.thumbnail || "";
-  $("title").textContent = current.title;
-  $("byline").textContent = [current.platform === "youtube" ? "YouTube" : "Instagram", current.uploader, fmtTime(current.duration)].filter(Boolean).join(" · ");
-  quality = current.qualities[0];
-  const opts = $("opts"); opts.innerHTML = "";
-  current.qualities.forEach(q => {
-    const b = document.createElement("button");
-    b.className = "q"; b.type = "button"; b.textContent = label(q);
-    b.setAttribute("aria-pressed", q === quality);
-    b.onclick = () => { quality = q; opts.querySelectorAll(".q").forEach(x => x.setAttribute("aria-pressed", x === b)); };
-    opts.appendChild(b);
-  });
-  const go = document.createElement("button");
-  go.className = "go"; go.type = "button"; go.id = "go"; go.textContent = "Download";
-  go.onclick = startDownload;
-  opts.appendChild(go);
-  $("progress").classList.remove("show");
-  $("card").classList.add("show");
+function normalize(raw) {
+  const m = (raw || "").trim().match(LINK_RE);
+  if (!m) return null;
+  let u = m[0].replace(/[).,;!?"']+$/, "");
+  if (!/^https?:\/\//i.test(u)) u = "https://" + u;
+  return u;
 }
 
-async function startDownload() {
-  setMsg("");
-  $("go").disabled = true;
-  $("progress").classList.add("show");
-  setProgress(0, "Starting…", "");
+function scrollTo(el) {
+  const r = el.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > window.innerHeight) el.scrollIntoView({ behavior: "smooth", block: r.height > window.innerHeight ? "start" : "nearest" });
+}
+
+// ---------------------------------------------------------------- alerts
+function showError(msg, retry) {
+  $("alertText").textContent = msg || "Something went wrong.";
+  retryAction = retry || null;
+  $("alertRetry").hidden = !retry;
+  $("alert").classList.add("show");
+  scrollTo($("alert"));
+}
+function clearError() { $("alert").classList.remove("show"); retryAction = null; }
+$("alertRetry").onclick = () => { const r = retryAction; clearError(); r && r(); };
+
+// ---------------------------------------------------------------- input
+$("paste").onclick = async () => {
   try {
-    const r = await fetch("/api/download", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: current.url, quality }) });
+    $("url").value = (await navigator.clipboard.readText()).trim();
+    onInputChanged();
+    if (normalize($("url").value)) getInfo();
+  } catch { $("url").focus(); showError("Your browser blocked clipboard access. Long-press or Ctrl+V to paste into the box."); }
+};
+
+$("url").addEventListener("paste", () => setTimeout(() => { onInputChanged(); if (normalize($("url").value)) getInfo(); }, 0));
+$("url").addEventListener("input", onInputChanged);
+
+function onInputChanged() {
+  clearError();
+  const u = normalize($("url").value);
+  if (current && u !== current.url && !polling) { hideCard(); current = null; }
+}
+
+$("form").onsubmit = e => { e.preventDefault(); getInfo(); };
+
+// ---------------------------------------------------------------- step 1: info
+const STAGES = [
+  [0, "Looking up the video…"],
+  [6, "Reading video details…"],
+  [15, "Still working. YouTube can take up to half a minute…"],
+  [35, "Trying another way in…"],
+  [70, "Almost there, thanks for waiting…"],
+];
+
+async function getInfo() {
+  const url = normalize($("url").value);
+  clearError();
+  if (!url) {
+    showError($("url").value.trim()
+      ? "That doesn't look like a YouTube or Instagram link. Copy the link from the Share button and paste it here."
+      : "Paste a YouTube or Instagram link first.");
+    $("url").focus();
+    return;
+  }
+  if (fetchCtl) fetchCtl.abort();
+  $("url").value = url;
+  fetchCtl = new AbortController();
+  const ctl = fetchCtl;
+  const timeout = setTimeout(() => ctl.abort("timeout"), 120000);
+  showLoading();
+  $("fetch").disabled = true;
+
+  try {
+    const r = await fetch("/api/info", { method: "POST", headers: { "Content-Type": "application/json" },
+                                         body: JSON.stringify({ url }), signal: ctl.signal });
+    const d = await r.json().catch(() => ({ error: "The server sent an unexpected reply. Please try again.", retryable: true }));
+    if (!r.ok) throw Object.assign(new Error(d.error), { retryable: d.retryable });
+    current = d;
+    renderInfo();
+  } catch (err) {
+    hideCard();
+    if (ctl.signal.aborted && ctl.signal.reason !== "timeout") return;  // user cancelled
+    if (ctl.signal.reason === "timeout") showError("This is taking too long. The site may be busy, so please try again.", getInfo);
+    else if (err instanceof TypeError) showError("Couldn't reach the server. Check your connection and try again.", getInfo);
+    else showError(err.message, err.retryable ? getInfo : null);
+  } finally {
+    clearTimeout(timeout);
+    clearInterval(stageTimer);
+    if (fetchCtl === ctl) fetchCtl = null;
+    $("fetch").disabled = false;
+  }
+}
+
+function showLoading() {
+  $("thumb").innerHTML = `<div class="sk" style="width:100%;height:100%"></div>`;
+  $("meta").innerHTML = `<div class="sk sk-line" style="width:90%"></div><div class="sk sk-line" style="width:60%"></div><div class="sk sk-line" style="width:35%"></div>`;
+  $("body").innerHTML = `
+    <div class="loading-row">
+      <span class="loading-text"><span class="spinner" aria-hidden="true"></span><span id="stage">${STAGES[0][1]}</span></span>
+      <span><span id="elapsed">0s</span> <button type="button" class="linkish" id="cancel">Cancel</button></span>
+    </div>`;
+  $("cancel").onclick = () => { fetchCtl && fetchCtl.abort("cancel"); };
+  $("card").classList.add("show");
+  scrollTo($("card"));
+  const started = Date.now();
+  clearInterval(stageTimer);
+  stageTimer = setInterval(() => {
+    const s = Math.floor((Date.now() - started) / 1000);
+    const el = $("elapsed"); if (!el) return;
+    el.textContent = s + "s";
+    $("stage").textContent = STAGES.filter(([t]) => s >= t).pop()[1];
+  }, 500);
+}
+
+function hideCard() { $("card").classList.remove("show"); clearInterval(polling); polling = null; }
+
+function setThumb() {
+  const t = $("thumb");
+  const fallbacks = [];
+  if (current.thumbnail) fallbacks.push(current.thumbnail);
+  if (current.platform === "youtube" && current.id) fallbacks.push(`https://i.ytimg.com/vi/${current.id}/hqdefault.jpg`);
+  const placeholder = () => { t.innerHTML = `<span>${platformName(current.platform)} video</span>`; };
+  const tryNext = () => {
+    const src = fallbacks.shift();
+    if (!src) return placeholder();
+    const img = new Image();
+    img.alt = ""; img.referrerPolicy = "no-referrer";
+    img.onload = () => { t.innerHTML = ""; t.appendChild(img); };
+    img.onerror = tryNext;
+    img.src = src;
+  };
+  placeholder();
+  tryNext();
+}
+
+function renderInfo() {
+  setThumb();
+  $("meta").innerHTML = `<h2>${esc(current.title)}</h2><p>${esc([platformName(current.platform), current.uploader, fmtTime(current.duration)].filter(Boolean).join(" · "))}</p>`;
+  quality = current.options[0].id;
+  $("body").innerHTML = `
+    <div class="opts">
+      <p class="opts-label" id="qlabel">Choose quality</p>
+      <div class="qgrid" role="radiogroup" aria-labelledby="qlabel">
+        ${current.options.map(o => `
+          <button type="button" class="q" role="radio" data-q="${esc(o.id)}" aria-checked="${o.id === quality}">
+            ${esc(o.label)}<small>${esc([o.note, o.size ? "≈ " + fmtSize(o.size) : ""].filter(Boolean).join(" · "))}</small>
+          </button>`).join("")}
+      </div>
+      <button type="button" class="go" id="go">Download</button>
+    </div>
+    <div class="progress" id="progress">
+      <div class="bar" id="bar"><i></i></div>
+      <div class="stat"><span id="pstatus">Starting…</span><span id="pinfo"></span></div>
+    </div>
+    <div class="done" id="done"></div>`;
+  $("body").querySelectorAll(".q").forEach(b => b.onclick = () => {
+    quality = b.dataset.q;
+    $("body").querySelectorAll(".q").forEach(x => x.setAttribute("aria-checked", x === b));
+  });
+  $("go").onclick = startDownload;
+  $("card").classList.add("show");
+  scrollTo($("card"));
+}
+
+// ---------------------------------------------------------------- step 2: download
+async function startDownload() {
+  clearError();
+  $("go").disabled = true; $("go").textContent = "Preparing…";
+  $("done").classList.remove("show");
+  $("progress").classList.add("show");
+  setProgress(null, "Starting download…", "");
+  scrollTo($("progress"));
+  try {
+    const r = await fetch("/api/download", { method: "POST", headers: { "Content-Type": "application/json" },
+                                             body: JSON.stringify({ url: current.url, quality }) });
     const d = await r.json();
-    if (!r.ok) throw new Error(d.error);
+    if (!r.ok) throw Object.assign(new Error(d.error), { retryable: d.retryable });
     poll(d.job_id);
-  } catch (err) { fail(err.message); }
+  } catch (err) {
+    downloadFailed(err instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : err.message, true);
+  }
 }
 
 function poll(id) {
+  clearInterval(polling);
+  let misses = 0;
   polling = setInterval(async () => {
     try {
-      const d = await (await fetch(`/api/progress/${id}`)).json();
-      if (d.status === "error") { clearInterval(polling); return fail(d.error); }
-      if (d.status === "downloading") setProgress(d.percent, `Downloading ${d.percent.toFixed(0)}%`, [fmtSpeed(d.speed), d.eta != null ? fmtTime(d.eta) + " left" : ""].filter(Boolean).join(" · "));
-      if (d.status === "processing") setProgress(null, "Merging & converting…", "");
-      if (d.status === "done") {
-        clearInterval(polling);
-        setProgress(100, "", "");
-        $("pstatus").innerHTML = `<span class="done">Ready — saving ${d.filename.replace(/[<>&]/g, "")}</span>`;
-        window.location.href = `/api/file/${id}`;
-        $("go").disabled = false;
-      }
-    } catch (err) { clearInterval(polling); fail("Lost connection to the server."); }
-  }, 700);
+      const r = await fetch(`/api/progress/${id}`);
+      const d = await r.json();
+      misses = 0;
+      if (!r.ok || d.status === "error") { clearInterval(polling); polling = null; return downloadFailed(d.error, d.retryable); }
+      if (d.status === "queued") setProgress(null, "Getting the video ready…", "");
+      if (d.status === "downloading") setProgress(d.percent, `Downloading ${d.percent.toFixed(0)}%`,
+        [fmtSpeed(d.speed), d.eta != null ? fmtTime(d.eta) + " left" : ""].filter(Boolean).join(" · "));
+      if (d.status === "processing") setProgress(null, quality === "audio" ? "Converting to MP3…" : "Finishing up the MP4…", "");
+      if (d.status === "done") { clearInterval(polling); polling = null; downloadReady(id, d); }
+    } catch {
+      if (++misses >= 8) { clearInterval(polling); polling = null; downloadFailed("Lost connection to the server. Please try again.", true); }
+    }
+  }, 800);
 }
 
 function setProgress(pct, status, info) {
@@ -192,7 +366,34 @@ function setProgress(pct, status, info) {
   $("pstatus").textContent = status; $("pinfo").textContent = info;
 }
 
-function fail(m) { setMsg(m || "Download failed."); $("progress").classList.remove("show"); if ($("go")) $("go").disabled = false; }
+function saveFile(id) {
+  const a = document.createElement("a");
+  a.href = `/api/file/${id}`; a.download = "";
+  document.body.appendChild(a); a.click(); a.remove();
+}
+
+function downloadReady(id, d) {
+  $("progress").classList.remove("show");
+  $("go").disabled = false; $("go").textContent = "Download in another quality";
+  const done = $("done");
+  done.innerHTML = `
+    <div class="done-head">✓ Your file is ready</div>
+    <p>${esc(d.filename)}${d.size ? " · " + fmtSize(d.size) : ""}<br>It should be saving to your Downloads now. Nothing happened? Use the button below. The file stays available for 30 minutes.</p>
+    <div class="done-actions">
+      <a class="btn" href="/api/file/${encodeURIComponent(id)}" download>Save file</a>
+      <button type="button" class="ghost" id="another">Download another video</button>
+    </div>`;
+  done.classList.add("show");
+  $("another").onclick = () => { hideCard(); current = null; $("url").value = ""; $("url").focus(); window.scrollTo({ top: 0, behavior: "smooth" }); };
+  scrollTo(done);
+  saveFile(id);
+}
+
+function downloadFailed(msg, retryable) {
+  $("progress").classList.remove("show");
+  $("go").disabled = false; $("go").textContent = "Download";
+  showError(msg || "The download failed.", retryable ? startDownload : null);
+}
 </script>
 </body>
 </html>
