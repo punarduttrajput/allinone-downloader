@@ -20,6 +20,17 @@ Private posts and many reels need a logged-in session. Export your Instagram coo
 (Netscape `cookies.txt` format, e.g. with a "Get cookies.txt" browser extension) and save the file as
 `cookies.txt` next to `app.py`. It's picked up automatically. Keep that file private.
 
+## Deployed on Render
+
+Live at https://allinone-downloader.onrender.com (Docker, free plan; it sleeps when idle, so the first
+visit after a while takes ~1 minute). Every push to `main` redeploys automatically.
+
+YouTube blocks cloud servers with "Sign in to confirm you're not a bot". To unblock it, export
+YouTube cookies (Netscape format, ideally from a spare Google account) and add them in the Render
+dashboard: **allinone-downloader → Environment → Secret Files → Add**, filename `cookies.txt`.
+Save, then redeploy. The app picks it up from `/etc/secrets/cookies.txt`. Cookies expire, so repeat
+this when the error comes back.
+
 ## When YouTube downloads start failing
 
 Sites change often. Update yt-dlp:

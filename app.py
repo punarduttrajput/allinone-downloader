@@ -22,9 +22,17 @@ from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
 BASE_DIR = Path(__file__).resolve().parent
-COOKIES_FILE = BASE_DIR / "cookies.txt"  # optional, for private / login-only Instagram posts
 WORK_ROOT = Path(tempfile.gettempdir()) / "allinone_downloads"
 WORK_ROOT.mkdir(exist_ok=True)
+
+# Optional cookies.txt for login-gated posts and YouTube's "not a bot" check.
+# Local: next to app.py. Render: a Secret File named cookies.txt (mounted read-only
+# at /etc/secrets), copied to a writable spot because yt-dlp updates the file.
+COOKIES_FILE = WORK_ROOT / "cookies.txt"
+for _src in (Path("/etc/secrets/cookies.txt"), BASE_DIR / "cookies.txt"):
+    if _src.exists():
+        shutil.copyfile(_src, COOKIES_FILE)
+        break
 JOB_TTL_SECONDS = 30 * 60
 
 ALLOWED_HOSTS = {
@@ -92,6 +100,9 @@ def format_for(quality: str) -> dict:
 def friendly_error(exc: Exception) -> str:
     msg = str(exc)
     low = msg.lower()
+    if "not a bot" in low:
+        return ("YouTube is blocking this server (\"confirm you're not a bot\"). "
+                "The site owner needs to add a YouTube cookies.txt to the server.")
     if "login" in low or "cookies" in low or "private" in low:
         return ("This post needs a logged-in account (private or age/login-gated). "
                 "Put a cookies.txt export next to app.py and try again.")
@@ -110,7 +121,7 @@ def cleanup_old_jobs() -> None:
             shutil.rmtree(jobs[jid]["dir"], ignore_errors=True)
             del jobs[jid]
     # leftovers from earlier runs
-    for d in WORK_ROOT.iterdir():
+    for d in WORK_ROOT.iterdir():  # cookies.txt is a file, so it's skipped below
         if d.is_dir() and now - d.stat().st_mtime > JOB_TTL_SECONDS and d.name not in jobs:
             shutil.rmtree(d, ignore_errors=True)
 
