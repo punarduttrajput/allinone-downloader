@@ -3,5 +3,5 @@ services:
     name: allinone-downloader
     runtime: docker
     plan: free
-    healthCheckPath: /
+    healthCheckPath: /healthz
     autoDeploy: true

@@ -136,6 +136,32 @@ def cleanup_old_jobs() -> None:
 
 # ---------------------------------------------------------------- routes
 
+@app.get("/healthz")
+def healthz():
+    return jsonify(status="ok", uptime_seconds=int(time.time() - STARTED_AT), active_jobs=len(jobs))
+
+
+def keep_alive() -> None:
+    """Render's free plan sleeps after ~15 min without inbound traffic.
+    Pinging our own public URL every 10 min counts as traffic and keeps it awake."""
+    import urllib.request
+
+    url = os.environ.get("RENDER_EXTERNAL_URL", "").rstrip("/") + "/healthz"
+    interval = int(os.environ.get("KEEPALIVE_SECONDS", "600"))
+    while True:
+        time.sleep(interval)
+        try:
+            with urllib.request.urlopen(url, timeout=30) as r:
+                print(f"keep-alive ping {r.status}", flush=True)
+        except Exception as e:  # noqa: BLE001 - never let the pinger die
+            print(f"keep-alive ping failed: {e}", flush=True)
+
+
+STARTED_AT = time.time()
+if os.environ.get("RENDER_EXTERNAL_URL") and os.environ.get("KEEPALIVE", "1") != "0":
+    threading.Thread(target=keep_alive, daemon=True).start()
+
+
 @app.get("/")
 def index():
     return send_from_directory(app.static_folder, "index.html")
