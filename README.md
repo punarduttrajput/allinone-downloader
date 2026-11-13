@@ -22,7 +22,8 @@ Private posts and many reels need a logged-in session. Export your Instagram coo
 
 ## Deployed on Render
 
-Live at https://allinone-downloader.onrender.com (Docker, free plan; it sleeps when idle, so the first
+Live at https://allinone-downloader.wovyr.com (also https://allinone-downloader.onrender.com;
+DNS: CNAME `allinone-downloader` → `allinone-downloader.onrender.com` at Hostinger) (Docker, free plan; it sleeps when idle, so the first
 visit after a while takes ~1 minute). Pushes to `main` do **not** redeploy automatically (Render has no
 GitHub connection); click **Manual Deploy → Deploy latest commit** in the Render dashboard.
 
