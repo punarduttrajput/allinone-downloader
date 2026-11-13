@@ -1,0 +1,6 @@
+.venv
+__pycache__
+.claude
+.git
+cookies.txt
+*.md
