@@ -23,7 +23,8 @@ Private posts and many reels need a logged-in session. Export your Instagram coo
 ## Deployed on Render
 
 Live at https://allinone-downloader.onrender.com (Docker, free plan; it sleeps when idle, so the first
-visit after a while takes ~1 minute). Every push to `main` redeploys automatically.
+visit after a while takes ~1 minute). Pushes to `main` do **not** redeploy automatically (Render has no
+GitHub connection); click **Manual Deploy → Deploy latest commit** in the Render dashboard.
 
 YouTube blocks cloud servers with "Sign in to confirm you're not a bot". To unblock it, export
 YouTube cookies (Netscape format, ideally from a spare Google account) and add them in the Render
